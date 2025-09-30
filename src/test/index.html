@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 90%;
+            margin: 50px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .chat-message {
+            margin: 5px 0;
+        }
+        .chat-message.user {
+            text-align: right;
+            color: blue;
+        }
+        .chat-message.bot {
+            text-align: left;
+            color: green;
+        }
+        .input-container {
+            display: flex;
+        }
+        .input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .input-container button {
+            padding: 10px 20px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .input-container button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #333;">Health Bot</h1>
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your message here...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function getChatHistory() {
+            const chatBox = document.getElementById("chat-box");
+            const messages = chatBox.children; // Lấy tất cả các phần tử con (tin nhắn)
+            const history = [];
+
+            for (let message of messages) {
+                const role = message.classList.contains("user") ? "user" : "bot"; // Xác định vai trò
+                const content = message.textContent.replace("Bạn: ", "").replace("Health Bot: ", ""); // Loại bỏ prefix
+                history.push({ role, content });
+            }
+
+            return history; // Trả về lịch sử trò chuyện
+        }
+        async function sendMessage() {
+            const userInput = document.getElementById("user-input").value;
+            if (!userInput) return;
+
+            // Display user message
+            const chatBox = document.getElementById("chat-box");
+            const userMessage = document.createElement("div");
+            userMessage.className = "chat-message user";
+            userMessage.textContent = "Bạn: " + userInput;
+            chatBox.appendChild(userMessage);
+
+            // Clear input field
+            document.getElementById("user-input").value = "";
+
+            // Get chat history
+            // const messages = getChatHistory();
+            // console.log({
+            //     question: userInput,
+            //     history: messages
+            // });
+            // Send message and history to backend
+            const response = await fetch("http://127.0.0.1:8000/health_bot", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    question: userInput
+                    // history: messages // Gửi lịch sử trò chuyện
+                })
+            });
+            
+            const data = await response.json();
+
+            // Display bot response
+            const botMessage = document.createElement("div");
+            botMessage.className = "chat-message bot";
+            botMessage.textContent = "Health Bot: " + (data.answer || "No response from bot.");
+            chatBox.appendChild(botMessage);
+
+            // Scroll to the bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
